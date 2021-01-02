@@ -1,4 +1,5 @@
 #include "chatbot.h"
+#include "stdio.h"
 
 #include <algorithm>
 #include <ctime>
@@ -49,12 +50,13 @@ ChatBot::ChatBot(const ChatBot &other)
       _chatLogic(other._chatLogic),
       _rootNode(other._rootNode) {
   _chatLogic->SetChatbotHandle(this);
+  printf("ChatBot - COPY Constructor\n");
 }
 
 // Copy Assignment
 ChatBot &ChatBot::operator=(const ChatBot &other) {
-  std::cout << "ChatBot Copy Assignment" << std::endl;
   _chatLogic->SetChatbotHandle(this);
+  printf("ChatBot - COPY Assignment\n");
   return *this = ChatBot(other);
 }
 
@@ -64,6 +66,7 @@ ChatBot::ChatBot(ChatBot &&other) noexcept
       _chatLogic(std::exchange(other._chatLogic, nullptr)),
       _rootNode(std::exchange(other._rootNode, nullptr)) {
   _chatLogic->SetChatbotHandle(this);
+  printf("ChatBot - MOVE Constructor\n");
 }
 
 // Move Assignment
@@ -74,6 +77,7 @@ ChatBot &ChatBot::operator=(ChatBot &&other) noexcept {
   std::swap(_chatLogic, other._chatLogic);
 
   _chatLogic->SetChatbotHandle(this);
+  printf("ChatBot - MOVE Assignment\n");
   return *this;
 }
 
