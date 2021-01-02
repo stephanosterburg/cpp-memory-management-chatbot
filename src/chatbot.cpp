@@ -1,9 +1,10 @@
+#include "chatbot.h"
+
 #include <algorithm>
 #include <ctime>
 #include <iostream>
 #include <random>
 
-#include "chatbot.h"
 #include "chatlogic.h"
 #include "graphedge.h"
 #include "graphnode.h"
@@ -32,7 +33,7 @@ ChatBot::~ChatBot() {
   std::cout << "ChatBot Destructor" << std::endl;
 
   // deallocate heap memory
-  if (_image != NULL) // Attention: wxWidgets used NULL and not nullptr
+  if (_image != NULL)  // Attention: wxWidgets used NULL and not nullptr
   {
     delete _image;
     _image = NULL;
@@ -42,51 +43,37 @@ ChatBot::~ChatBot() {
 //// STUDENT CODE
 ////
 
-// copy constructor
-ChatBot::ChatBot(const ChatBot &source) {
-  _chatLogic = source._chatLogic;
-  _rootNode = source._rootNode;
-  _image = new wxBitmap(*source._image);
+// Copy Constructor
+ChatBot::ChatBot(const ChatBot &other)
+    : _image(other._image),
+      _chatLogic(other._chatLogic),
+      _rootNode(other._rootNode) {
+  _chatLogic->SetChatbotHandle(this);
 }
 
-// move constructor
-ChatBot::ChatBot(ChatBot &&source) {
-  _chatLogic = source._chatLogic;
-  _rootNode = source._rootNode;
-  _image = source._image;
-
-  source._chatLogic = nullptr;
-  source._rootNode = nullptr;
-  source._image = nullptr;
+// Copy Assignment
+ChatBot &ChatBot::operator=(const ChatBot &other) {
+  std::cout << "ChatBot Copy Assignment" << std::endl;
+  _chatLogic->SetChatbotHandle(this);
+  return *this = ChatBot(other);
 }
 
-// copy assignment
-ChatBot &ChatBot::operator=(const ChatBot &source) {
-  if (this == &source)
-    return *this;
-
-  delete _image;
-  _chatLogic = source._chatLogic;
-  _rootNode = source._rootNode;
-  _image = new wxBitmap(*source._image);
-
-  return *this;
+// Move Constructor
+ChatBot::ChatBot(ChatBot &&other) noexcept
+    : _image(std::exchange(other._image, nullptr)),
+      _chatLogic(std::exchange(other._chatLogic, nullptr)),
+      _rootNode(std::exchange(other._rootNode, nullptr)) {
+  _chatLogic->SetChatbotHandle(this);
 }
 
-// move assignment
-ChatBot &ChatBot::operator=(ChatBot &&source) {
-  if (this == &source)
-    return *this;
+// Move Assignment
+ChatBot &ChatBot::operator=(ChatBot &&other) noexcept {
+  std::swap(_image, other._image);
+  std::swap(_currentNode, other._currentNode);
+  std::swap(_rootNode, other._rootNode);
+  std::swap(_chatLogic, other._chatLogic);
 
-  delete _image;
-  _chatLogic = source._chatLogic;
-  _rootNode = source._rootNode;
-  _image = source._image;
-
-  source._chatLogic = nullptr;
-  source._rootNode = nullptr;
-  source._image = nullptr;
-
+  _chatLogic->SetChatbotHandle(this);
   return *this;
 }
 
@@ -96,7 +83,7 @@ ChatBot &ChatBot::operator=(ChatBot &&source) {
 void ChatBot::ReceiveMessageFromUser(std::string message) {
   // loop over all edges and keywords and compute Levenshtein distance to query
   typedef std::pair<GraphEdge *, int> EdgeDist;
-  std::vector<EdgeDist> levDists; // format is <ptr,levDist>
+  std::vector<EdgeDist> levDists;  // format is <ptr,levDist>
 
   for (size_t i = 0; i < _currentNode->GetNumberOfChildEdges(); ++i) {
     GraphEdge *edge = _currentNode->GetChildEdgeAtIndex(i);
@@ -114,8 +101,8 @@ void ChatBot::ReceiveMessageFromUser(std::string message) {
               [](const EdgeDist &a, const EdgeDist &b) {
                 return a.second < b.second;
               });
-    newNode = levDists.at(0).first->GetChildNode(); // after sorting the best
-                                                    // edge is at first position
+    newNode = levDists.at(0).first->GetChildNode();  // after sorting the best
+    // edge is at first position
   } else {
     // go back to root node
     newNode = _rootNode;
@@ -148,15 +135,12 @@ int ChatBot::ComputeLevenshteinDistance(std::string s1, std::string s2) {
   const size_t m(s1.size());
   const size_t n(s2.size());
 
-  if (m == 0)
-    return n;
-  if (n == 0)
-    return m;
+  if (m == 0) return n;
+  if (n == 0) return m;
 
   size_t *costs = new size_t[n + 1];
 
-  for (size_t k = 0; k <= n; k++)
-    costs[k] = k;
+  for (size_t k = 0; k <= n; k++) costs[k] = k;
 
   size_t i = 0;
   for (std::string::const_iterator it1 = s1.begin(); it1 != s1.end();
