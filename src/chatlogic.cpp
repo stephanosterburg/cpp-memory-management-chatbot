@@ -230,7 +230,10 @@ void ChatLogic::LoadAnswerGraphFromFile(std::string filename) {
   chatbot.SetChatLogicHandle(this);
   chatbot.SetRootNode(rootNode);
 
-  SetChatbotHandle(&chatbot);
+//    Since this method is already being called in the methods you have implemented for the rule of five in the
+//    chatbot you can also omit this line of code.
+//  SetChatbotHandle(&chatbot);
+
   rootNode->MoveChatbotHere(std::move(chatbot));
 
   ////
